@@ -9,7 +9,16 @@ using namespace std;
 #include <random>
 #include <math.h>
 
-void valor_q(float iones_x[], float iones_y[], int cantidad)
+__global__ void kernel(float* iones_x, float* iones_y, int cantidad) {
+    int tId = threadIdx.x + blockIdx.x * blockDim.x;
+
+	if(tId < N * M) {
+    }
+    
+}
+
+
+void valor_q(float* iones_x, float* iones_y, int cantidad)
 {
     int a, b;
     float Q_menor = 100000000.0;
@@ -48,10 +57,14 @@ void valor_q(float iones_x[], float iones_y[], int cantidad)
 int main(int argc, char const *argv[])
 {
     float *iones_x, *iones_y;
+    float *gpu_iones_x, *gpu_iones_y;
     float x, y;
 
     iones_x = new float[6000];
     iones_y = new float[6000];
+
+    int block_size = 256;
+    int grid_size = (int) ceil( (float) 6000 / block_size);
 
     std::random_device rd;
     std::default_random_engine generator(rd()); // rd() provides a random seed
@@ -65,21 +78,35 @@ int main(int argc, char const *argv[])
         iones_x[i] = x;
         iones_y[i] = y;
     }
-    int cantidad;
-    clock_t t1, t2;
-    double ms;
 
-    t1 = clock();
+
+    cudaMalloc(&gpu_iones_x, sizeof(float) * 6000);
+    cudaMalloc(&gpu_iones_y, sizeof(float) * 6000);
+
+    cudaMemcpy(gpu_iones_x, iones_x, sizeof(float) * 6000, cudaMemcpyHostToDevice);
+    cudaMemcpy(gpu_iones_y, iones_y, sizeof(float) * 6000, cudaMemcpyHostToDevice);
+
+    cudaEventCreate(&ct1);
+	cudaEventCreate(&ct2);
+    cudaEventRecord(ct1);
+   
+    
     for (cantidad = 5000; cantidad < 6000; cantidad++)
     {
-        valor_q(iones_x, iones_y, cantidad);
+         kernel<<<grid_size, block_size>>>(gpu_iones_x, gpu_iones_y, cantidad);
     }
 
-    t2 = clock();
-    ms = 1000.0 * (double)(t2 - t1) / CLOCKS_PER_SEC;
-    cout << "Tiempo CPU: " << ms << " [ms]" << endl;
+    cudaEventRecord(ct2);
+	cudaEventSynchronize(ct2);
+    cudaEventElapsedTime(&dt, ct1, ct2);
+
+    cout << "Tiempo: " << dt << "[ms]" << '\n';
+
+    cudaFree(gpu_iones_x);
+    cudaFree(gpu_iones_y);
 
     delete iones_x;
     delete iones_y;
+    
     return 0;
 }
