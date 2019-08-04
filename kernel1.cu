@@ -124,9 +124,15 @@ int main(int argc, char const *argv[])
     
     for (cantidad = 5000; cantidad < 6000; cantidad++)
     {
+        cout << "Calculando carga para " <<  cantidad << endl;
         calcular_carga<<<grid_size, block_size>>>(gpu_iones_x, gpu_iones_y, cargas, cantidad);
+        cudaDeviceSynchronize();
+        cout << "Calculando carga fila para " <<  cantidad << endl;
         calcular_carga_fila<<<grid_size_b, block_size>>>(gpu_iones_x, gpu_iones_y, cargas, cargas_menores, cantidad);
+        cudaDeviceSynchronize();
+        cout << "Posicionado ion para " <<  cantidad << endl;
         posicionar_ion<<<grid_size_b, block_size>>>(gpu_iones_x, gpu_iones_y, cargas_menores, cantidad);
+        cudaDeviceSynchronize();
     }
 
     cudaEventRecord(ct2);
