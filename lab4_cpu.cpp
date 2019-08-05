@@ -17,10 +17,10 @@ void valor_q(int iones_x[], int iones_y[], int cantidad)
     float distancia;
     int menor[2];
     float x_2, y_2;
-    cout << "Posicionando ion " << cantidad << endl;
+    //cout << "Posicionando ion " << cantidad << endl;
     for (a = 0; a < 8192; a++)
     {
-        cout << "calculando " << a << " " << b << endl;
+        //cout << "calculando " << a << " " << b << endl;
         for (b = 0; b < 8192; b++)
         {
             carga = 0;
@@ -46,6 +46,7 @@ void valor_q(int iones_x[], int iones_y[], int cantidad)
     }
     iones_x[cantidad] = menor[0];
     iones_y[cantidad] = menor[1];
+    cout << menor[0] << " " << menor[1] << endl;
 }
 
 int main(int argc, char const *argv[])
