@@ -18,7 +18,7 @@ __global__ void calcular_carga(float* iones_x, float* iones_y, float* cargas, in
         int b = tId%8192;
        
         float carga = 0;
-        int distancia;
+        float distancia;
         float x_2, y_2;
         carga = 0;
         for (int i = 0; i < cantidad; i++)  {
@@ -122,7 +122,7 @@ int main(int argc, char const *argv[])
     cudaEventRecord(ct1);
    
     
-    for (cantidad = 5000; cantidad < 6000; cantidad++)
+    for (cantidad = 5000; cantidad < 5001; cantidad++)
     {
         cout << "Calculando carga para " <<  cantidad << endl;
         calcular_carga<<<grid_size, block_size>>>(gpu_iones_x, gpu_iones_y, cargas, cantidad);
