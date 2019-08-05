@@ -59,7 +59,7 @@ int main(int argc, char const *argv[])
     for (int i = 0; i < 5000; i++)
     {
         fscanf(in, "%i %i", &iones_x[i], &iones_y[i]);
-        cout << iones_x[i] << " " << iones_y[i] << endl;
+        //   cout << iones_x[i] << " " << iones_y[i] << endl;
     }
 
     int cantidad;
@@ -67,7 +67,7 @@ int main(int argc, char const *argv[])
     double ms;
 
     t1 = clock();
-    for (cantidad = 5000; cantidad < 5001; cantidad++)
+    for (cantidad = 5000; cantidad < 6000; cantidad++)
     {
         valor_q(iones_x, iones_y, cantidad);
     }
