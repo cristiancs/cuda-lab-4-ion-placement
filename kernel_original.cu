@@ -71,6 +71,7 @@ __global__ void posicionar_ion(float* iones_x, float* iones_y, float*cargas_meno
     if(tId < 1) {
         for (int i = 0; i < 8192*3; i+=3)  {
             if(cargas_menores[i] < Q_menor){
+                printf("%i %f \n", i, Q_menor);
                 Q_menor = cargas_menores[i];
                 
                 a = cargas_menores[i+1];
@@ -119,16 +120,17 @@ int main(int argc, char const *argv[])
     cudaMalloc(&cargas_menores, sizeof(float) * 8192*3);
 
     cudaMemcpy(gpu_cargas, cargas, sizeof(float) * 8192 * 8192, cudaMemcpyHostToDevice);
-    cudaMemcpy(gpu_iones_x, iones_x, sizeof(float) * 6000, cudaMemcpyHostToDevice);
-    cudaMemcpy(gpu_iones_y, iones_y, sizeof(float) * 6000, cudaMemcpyHostToDevice);
+    
 
     cudaEventCreate(&ct1);
 	cudaEventCreate(&ct2);
     cudaEventRecord(ct1);
 
     
-    for (cantidad = 5000; cantidad < 5001; cantidad++)
+    for (cantidad = 5000; cantidad < 5100; cantidad++)
     {
+        cudaMemcpy(gpu_iones_x, iones_x, sizeof(float) * 6000, cudaMemcpyHostToDevice);
+        cudaMemcpy(gpu_iones_y, iones_y, sizeof(float) * 6000, cudaMemcpyHostToDevice);
         calcular_carga<<<grid_size, block_size>>>(gpu_iones_x, gpu_iones_y, gpu_cargas, cantidad);
         cudaDeviceSynchronize();
 
