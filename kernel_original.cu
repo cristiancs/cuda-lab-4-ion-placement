@@ -21,7 +21,6 @@ __global__ void calcular_carga(float* iones_x, float* iones_y, float* cargas, in
         float carga = 0;
         float distancia;
         float x_2, y_2;
-        carga = 0;
         for (int i = 0; i < cantidad; i++)  {
             x_2 = (x - iones_x[i]) * (x - iones_x[i]);
             y_2 = (y - iones_y[i]) * (y - iones_y[i]);
@@ -44,15 +43,15 @@ __global__ void calcular_carga_fila(float* iones_x, float* iones_y, float* carga
     
 
     if(tId < 8192) {
-        float Q_menor = 100000000000;
-        int x = tId;
-        int y;
+        float Q_menor = cargas[tId*8192];
+        int y = tId;
+        int x;
         
 
         for (int i = tId*8192; i < tId*8192+8192; i++)  {
             if(cargas[i] <Q_menor){
                 Q_menor = cargas[i];
-                y = i%8192;
+                x = i%8192;
             }
         }
         cargas_menores[tId*3] = Q_menor;
@@ -64,9 +63,9 @@ __global__ void calcular_carga_fila(float* iones_x, float* iones_y, float* carga
 // Calculamos entre todas la menor y ponemos la carga ahí
 __global__ void posicionar_ion(float* iones_x, float* iones_y, float*cargas_menores, int cantidad) {
     int tId = threadIdx.x + blockIdx.x * blockDim.x;
-    float Q_menor = 100000000000;
-    int a;
-    int b;
+    float Q_menor = cargas_menores[0];
+    int x = cargas_menores[1];
+    int y = cargas_menores[2];
 
     if(tId < 1) {
         for (int i = 0; i < 8192*3; i+=3)  {
@@ -74,13 +73,13 @@ __global__ void posicionar_ion(float* iones_x, float* iones_y, float*cargas_meno
                 printf("%i %f \n", i, Q_menor);
                 Q_menor = cargas_menores[i];
                 
-                a = cargas_menores[i+1];
-                b = cargas_menores[i+2];
+                x = cargas_menores[i+1];
+                y = cargas_menores[i+2];
                 
             }
         }
-        iones_x[cantidad] = a;
-        iones_y[cantidad] = b; 
+        iones_x[cantidad] = x;
+        iones_y[cantidad] = y; 
     }
 
     
