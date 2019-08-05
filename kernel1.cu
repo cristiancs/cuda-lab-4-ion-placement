@@ -12,8 +12,17 @@ using namespace std;
 // Cada thread deberia calcular la carga de 1 punto
 __global__ void calcular_carga(float* iones_x, float* iones_y, float* cargas, int cantidad) {
     int tId = threadIdx.x + blockIdx.x * blockDim.x;
+
+    
     
 	if(tId < 8192*8192) {
+
+
+        __syncthreads();
+
+       
+        __shared__ int iones_fila[6000*2];
+
         int a = tId/8192;
         int b = tId%8192;
         
@@ -21,9 +30,18 @@ __global__ void calcular_carga(float* iones_x, float* iones_y, float* cargas, in
         float distancia;
         float x_2, y_2;
         carga = 0;
+        if(threadIdx.x < 6000) {
+            iones_fila[threadIdx.x] =  iones_x[threadIdx.x];
+            iones_fila[threadIdx.x*2] =  iones_y[threadIdx.x];
+             __syncthreads();
+        }
+       
+       
         for (int i = 0; i < cantidad; i++)  {
-            x_2 = (a - iones_x[i]) * (a - iones_x[i]);
-            y_2 = (b - iones_y[i]) * (b - iones_y[i]);
+           
+            
+            x_2 = (a - iones_fila[i]) * (a - iones_fila[i]);
+            y_2 = (b - iones_fila[2*i]) * (b - iones_fila[2*i]);
             distancia = sqrt(x_2 + y_2);
             if (distancia == 0)  {
                 distancia = 0.0000000000001;
@@ -81,20 +99,22 @@ __global__ void posicionar_ion(float* iones_x, float* iones_y, float*cargas_meno
 
 int main(int argc, char const *argv[])
 {
-    float *iones_x, *iones_y;
+    int *iones_x, *iones_y;
     float *gpu_iones_x, *gpu_iones_y, *cargas, *cargas_menores;
     float x, y;
     cudaEvent_t ct1, ct2;
     float dt;
     int cantidad;
-
-    iones_x = new float[6000];
-    iones_y = new float[6000];
+    iones_x = new int[6000];
+    iones_y = new int[6000];
 
     int block_size = 256;
     int grid_size = (int) ceil( (float) 8192*8182 / block_size);
     int grid_size_b = (int) ceil( (float) 8192 / block_size);
     int grid_size_c = (int) ceil( (float) 1 / block_size);
+
+    
+    
 
     std::random_device rd;
     std::default_random_engine generator(rd()); // rd() provides a random seed

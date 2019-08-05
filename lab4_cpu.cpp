@@ -9,7 +9,7 @@ using namespace std;
 #include <random>
 #include <math.h>
 
-void valor_q(float iones_x[], float iones_y[], int cantidad)
+void valor_q(int iones_x[], int iones_y[], int cantidad)
 {
     int a, b;
     float Q_menor = 100000000.0;
@@ -50,24 +50,17 @@ void valor_q(float iones_x[], float iones_y[], int cantidad)
 
 int main(int argc, char const *argv[])
 {
-    float *iones_x, *iones_y;
-    float x, y;
+    int *iones_x, *iones_y;
+    iones_x = new int[6000];
+    iones_y = new int[6000];
 
-    iones_x = new float[6000];
-    iones_y = new float[6000];
-
-    std::random_device rd;
-    std::default_random_engine generator(rd()); // rd() provides a random seed
-    std::uniform_real_distribution<double> distribution(0.1, 8192);
-
-    for (int i = 0; i < 5000; ++i)
+    FILE *in = fopen("dataset", "r");
+    for (int i = 0; i < 5000; i++)
     {
-
-        x = distribution(generator);
-        y = distribution(generator);
-        iones_x[i] = x;
-        iones_y[i] = y;
+        fscanf(in, "%i %i", &iones_x[i], &iones_y[i]);
+        cout << iones_x[i] << " " << iones_y[i] << endl;
     }
+
     int cantidad;
     clock_t t1, t2;
     double ms;
