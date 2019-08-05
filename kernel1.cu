@@ -16,7 +16,7 @@ __global__ void calcular_carga(float* iones_x, float* iones_y, float* cargas, in
 	if(tId < 8192*8192) {
         int a = tId/8192;
         int b = tId%8192;
-       
+        
         float carga = 0;
         float distancia;
         float x_2, y_2;
@@ -63,8 +63,8 @@ __global__ void posicionar_ion(float* iones_x, float* iones_y, float*cargas_meno
     int a = tId;
     int b;
 
-    if(tId < 8192) {
-        for (int i = tId*3; i < 8192*3; i++)  {
+    if(tId < 1) {
+        for (int i = tId*3; i < 8192*3; i+=3)  {
             if(cargas_menores[i] < Q_menor){
                 Q_menor = cargas_menores[i];
                 a = cargas_menores[i+1];
@@ -94,6 +94,7 @@ int main(int argc, char const *argv[])
     int block_size = 256;
     int grid_size = (int) ceil( (float) 8192*8182 / block_size);
     int grid_size_b = (int) ceil( (float) 8192 / block_size);
+    int grid_size_c = (int) ceil( (float) 1 / block_size);
 
     std::random_device rd;
     std::default_random_engine generator(rd()); // rd() provides a random seed
@@ -131,7 +132,7 @@ int main(int argc, char const *argv[])
         calcular_carga_fila<<<grid_size_b, block_size>>>(gpu_iones_x, gpu_iones_y, cargas, cargas_menores, cantidad);
         cudaDeviceSynchronize();
         cout << "Posicionado ion para " <<  cantidad << endl;
-        posicionar_ion<<<grid_size_b, block_size>>>(gpu_iones_x, gpu_iones_y, cargas_menores, cantidad);
+        posicionar_ion<<<grid_size_c, block_size>>>(gpu_iones_x, gpu_iones_y, cargas_menores, cantidad);
         cudaDeviceSynchronize();
     }
 

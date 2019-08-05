@@ -20,9 +20,11 @@ void valor_q(float iones_x[], float iones_y[], int cantidad)
     cout << "Posicionando ion " << cantidad << endl;
     for (a = 0; a < 8192; a++)
     {
+        cout << "calculando " << a << " " << b << endl;
         for (b = 0; b < 8192; b++)
         {
             carga = 0;
+
             for (int i = 0; i < cantidad; i++)
             {
                 x_2 = (a - iones_x[i]) * (a - iones_x[i]);
