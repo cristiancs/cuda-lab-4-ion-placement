@@ -9,13 +9,13 @@ using namespace std;
 #include <random>
 #include <math.h>
 
-void valor_q(int iones_x[], int iones_y[], int cantidad)
+void valor_q(float iones_x[], float iones_y[], int cantidad)
 {
     int a, b;
     float Q_menor = 100000000.0;
     float carga = 0;
     float distancia;
-    int menor[2];
+    float menor[2];
     float x_2, y_2;
     //cout << "Posicionando ion " << cantidad << endl;
     for (a = 0; a < 8192; a++)
@@ -39,8 +39,8 @@ void valor_q(int iones_x[], int iones_y[], int cantidad)
             if (carga < Q_menor)
             {
                 Q_menor = carga;
-                menor[0] = a;
-                menor[1] = b;
+                menor[0] = (float)a;
+                menor[1] = (float)b;
             }
         }
     }
@@ -51,14 +51,14 @@ void valor_q(int iones_x[], int iones_y[], int cantidad)
 
 int main(int argc, char const *argv[])
 {
-    int *iones_x, *iones_y;
-    iones_x = new int[6000];
-    iones_y = new int[6000];
+    float *iones_x, *iones_y;
+    iones_x = new float[6000];
+    iones_y = new float[6000];
 
     FILE *in = fopen("dataset", "r");
     for (int i = 0; i < 5000; i++)
     {
-        fscanf(in, "%i %i", &iones_x[i], &iones_y[i]);
+        fscanf(in, "%f %f", &iones_x[i], &iones_y[i]);
         //   cout << iones_x[i] << " " << iones_y[i] << endl;
     }
 

@@ -15,8 +15,8 @@ __global__ void calcular_carga(float* iones_x, float* iones_y, float* cargas, in
     
 	if(tId < 8192*8192) {
         
-        int x = tId/8192;
-        int y = tId%8192;
+        float x = tId%8192;
+        float y = tId/8192;
         
         float carga = 0;
         float distancia;
@@ -25,10 +25,12 @@ __global__ void calcular_carga(float* iones_x, float* iones_y, float* cargas, in
             x_2 = (x - iones_x[i]) * (x - iones_x[i]);
             y_2 = (y - iones_y[i]) * (y - iones_y[i]);
             distancia = sqrt(x_2 + y_2);
-            if (distancia == 0)  {
-                distancia = 0.0000000000001;
+            if (distancia != 0)  {
+                carga += 1.0 / distancia;
+            } else {
+                carga+=1;
             }
-            carga += 1.0 / distancia;
+            
         }
     
         cargas[tId] = carga;
@@ -44,8 +46,8 @@ __global__ void calcular_carga_fila(float* iones_x, float* iones_y, float* carga
 
     if(tId < 8192) {
         float Q_menor = cargas[tId*8192];
-        int y = tId;
-        int x;
+        float y = tId;
+        float x;
         
 
         for (int i = tId*8192; i < tId*8192+8192; i++)  {
@@ -63,20 +65,24 @@ __global__ void calcular_carga_fila(float* iones_x, float* iones_y, float* carga
 // Calculamos entre todas la menor y ponemos la carga ahí
 __global__ void posicionar_ion(float* iones_x, float* iones_y, float*cargas_menores, int cantidad) {
     int tId = threadIdx.x + blockIdx.x * blockDim.x;
-    float Q_menor = cargas_menores[0];
-    int x = cargas_menores[1];
-    int y = cargas_menores[2];
+    
 
     if(tId < 1) {
+        float Q_menor = cargas_menores[0];
+        float x = cargas_menores[1];
+        float y = cargas_menores[2];
+
         for (int i = 0; i < 8192*3; i+=3)  {
+            
             if(cargas_menores[i] < Q_menor){
-                printf("%i %f \n", i, Q_menor);
+                
                 Q_menor = cargas_menores[i];
                 
                 x = cargas_menores[i+1];
                 y = cargas_menores[i+2];
                 
             }
+            printf("%f %f %f %f\n", cargas_menores[i], Q_menor, cargas_menores[i+1], cargas_menores[i+2]);
         }
         iones_x[cantidad] = x;
         iones_y[cantidad] = y; 
@@ -91,16 +97,15 @@ __global__ void posicionar_ion(float* iones_x, float* iones_y, float*cargas_meno
 int main(int argc, char const *argv[])
 {
     
-    float *gpu_cargas, *cargas_menores, *cargas, *gpu_iones_x, *gpu_iones_y, *iones_x, *iones_y;
+    float *gpu_cargas, *cargas_menores, *gpu_iones_x, *gpu_iones_y, *iones_x, *iones_y;
     cudaEvent_t ct1, ct2;
     float dt;
     int cantidad;
     iones_x = new float[6000];
     iones_y = new float[6000];
-    cargas = new float[8192*8192];
 
     int block_size = 256;
-    int grid_size = (int) ceil( (float) 8192*8182 / block_size);
+    int grid_size = (int) ceil( (float) 8192*8192 / block_size);
     int grid_size_b = (int) ceil( (float) 8192 / block_size);
     int grid_size_c = (int) ceil( (float) 1 / block_size);
 
@@ -109,7 +114,6 @@ int main(int argc, char const *argv[])
     for (int i = 0; i < 5000; i++)
     {
         fscanf(in, "%f %f", &iones_x[i], &iones_y[i]);
-        //cout << iones_x[i] << " " << iones_y[i] << endl;
     }
 
 
@@ -118,8 +122,8 @@ int main(int argc, char const *argv[])
     cudaMalloc(&gpu_cargas, sizeof(float) * 8192 * 8192);
     cudaMalloc(&cargas_menores, sizeof(float) * 8192*3);
 
-    cudaMemcpy(gpu_cargas, cargas, sizeof(float) * 8192 * 8192, cudaMemcpyHostToDevice);
-    
+    cudaMemcpy(gpu_iones_x, iones_x ,sizeof(float) * 6000, cudaMemcpyHostToDevice);
+    cudaMemcpy(gpu_iones_y, iones_y ,sizeof(float) * 6000, cudaMemcpyHostToDevice);
 
     cudaEventCreate(&ct1);
 	cudaEventCreate(&ct2);
@@ -128,18 +132,14 @@ int main(int argc, char const *argv[])
     
     for (cantidad = 5000; cantidad < 5100; cantidad++)
     {
-        cudaMemcpy(gpu_iones_x, iones_x, sizeof(float) * 6000, cudaMemcpyHostToDevice);
-        cudaMemcpy(gpu_iones_y, iones_y, sizeof(float) * 6000, cudaMemcpyHostToDevice);
+        
+        
         calcular_carga<<<grid_size, block_size>>>(gpu_iones_x, gpu_iones_y, gpu_cargas, cantidad);
         cudaDeviceSynchronize();
 
-        
-
-        cudaDeviceSynchronize();
-        //cout << "Calculando carga fila para " <<  cantidad << endl;
         calcular_carga_fila<<<grid_size_b, block_size>>>(gpu_iones_x, gpu_iones_y, gpu_cargas, cargas_menores, cantidad);
         cudaDeviceSynchronize();
-        //cout << "Posicionado ion para " <<  cantidad << endl;
+
         posicionar_ion<<<grid_size_c, block_size>>>(gpu_iones_x, gpu_iones_y, cargas_menores, cantidad);
         cudaDeviceSynchronize();
         cudaMemcpy(iones_x, gpu_iones_x,sizeof(float) * 6000, cudaMemcpyDeviceToHost);
@@ -152,11 +152,13 @@ int main(int argc, char const *argv[])
     cudaEventElapsedTime(&dt, ct1, ct2);
 
     cout << "Tiempo: " << dt << "[ms]" << '\n';
-
+    
     cudaFree(gpu_iones_x);
     cudaFree(gpu_iones_y);
-    cudaFree(cargas);
+    cudaFree(gpu_cargas);
     cudaFree(cargas_menores);
+    cudaFree(gpu_iones_x);
+    cudaFree(gpu_iones_y);
 
     delete iones_x;
     delete iones_y;
