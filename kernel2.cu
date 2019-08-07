@@ -25,11 +25,14 @@ __global__ void calcular_carga(float* iones_x, float* iones_y, float* cargas, in
             x_2 = (x - iones_x[i]) * (x - iones_x[i]);
             y_2 = (y - iones_y[i]) * (y - iones_y[i]);
             distancia = sqrt(x_2 + y_2);
-            if (distancia != 0)  {
-                carga += 1.0 / distancia;
-            } else {
-                carga+=1;
+            if(distancia < 100) {
+                if (distancia != 0)  {
+                    carga += 1.0 / distancia;
+                } else {
+                    carga+=1;
+                }
             }
+           
             
         }
     
@@ -82,7 +85,7 @@ __global__ void posicionar_ion(float* iones_x, float* iones_y, float*cargas_meno
                 y = cargas_menores[i+2];
                 
             }
-            printf("%f %f %f %f\n", cargas_menores[i], Q_menor, cargas_menores[i+1], cargas_menores[i+2]);
+        //    printf("%f %f %f %f\n", cargas_menores[i], Q_menor, cargas_menores[i+1], cargas_menores[i+2]);
         }
         iones_x[cantidad] = x;
         iones_y[cantidad] = y; 
@@ -130,7 +133,7 @@ int main(int argc, char const *argv[])
     cudaEventRecord(ct1);
 
     
-    for (cantidad = 5000; cantidad < 5100; cantidad++)
+    for (cantidad = 5000; cantidad < 5010; cantidad++)
     {
         
         
